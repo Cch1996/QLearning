@@ -8,9 +8,10 @@
 
 
 #数组中的方向表示
-#        3=north
-#2=west              0=east
-#        1=south
+#the direction 
+#           3 = north
+# 2 = west              0 = east
+#           1 = south
 #
 
 
@@ -22,11 +23,14 @@ class juzhen:
     matrix=[[0 for col in range(12)] for row in range(12)]
 # win is the value of the 9th grid, los is the value of 10th grid, noise discount reward 
 #win表示9号格子的值，los表示10号格子的值，noise表示到两边的概率，discount表示值的递减，reward表示生存奖励
-    def __init__(self,win=1,los=-1,noise=0.2,discount=0.9,livingreward=0.0):
+    def __init__(self,win=1,los=-1,noise=0.2,discount=0.9,livingreward=0.0,alpha=1,epsilon=0):
         self.noise=noise
         self.discount=discount
         self.livingreward=livingreward
         self.stepNo=0
+        self.learn=alpha #learn 意思是alpha
+        self.explore=epsilon #explore 意思是epsilon        要求：alpha+eosilon<=1
+
         for k in range(12) :
             self.content[k]=0
             self.B_content[k]=0
@@ -97,8 +101,13 @@ class juzhen:
                     temp=start-to
 
 #                    print(temp)
-                    tempmax=max(self.content[start],self.livingreward+self.discount*((1-self.noise)*self.B_content[to]+
-                        0.5*self.noise*self.added_num(start, (start+4-temp))+0.5*self.noise*self.added_num(start,start-4+temp)))
+                    tempmax=max(self.content[start],self.livingreward+
+                                self.content[start]+
+                                self.learn*(self.discount*((1-self.noise)*self.B_content[to]+0.5*self.noise*self.added_num(start, (start+4-temp))+
+                                            0.5*self.noise*self.added_num(start,start-4+temp)-self.content[start])+
+                                self.explore*(0.25*self.added_num(start,start-3)+0.25*self.added_num(start,start-1)+0.25*self.added_num(start,start+1)+
+                                            0.25*self.added_num(start,start+3)-self.content[start]))
+                                )
                     if(self.content[start]<tempmax) :
                         if (temp==-3) :
                             self.Direction[start]=0

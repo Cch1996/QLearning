@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 from Tkinter import *
 import tkFont
+import tkMessageBox
 from juzhen import juzhen
 #global gridworld
 #gridworld = juzhen()
@@ -14,15 +15,19 @@ class Graphics:
 	noise = 0
 	livingreword = 0
 	discount = 0
+	alpha = 0
+	epsilon = 0
 	gridworld = 0
 	def __init__(self,root):
 		self.root = root
 		Graphics.gridworld = juzhen()
 	def drawGraphics(self):
-		cv = Canvas(root,bg='black',height=400,width=520)
+		cv = Canvas(root,bg='black',height=400,width=700)
 		Graphics.noise =StringVar()
 		Graphics.discount=StringVar()
 		Graphics.livingreword =StringVar()
+		Graphics.alpha = StringVar()
+		Graphics.epsilon = StringVar()
 		Graphics.QV = cv
 		
 		cv.create_rectangle(50,50,130,130,fill='green',outline='white')
@@ -45,17 +50,30 @@ class Graphics:
 		Graphics.IterateCount = cv.create_text(170,330,font = afont,text="VALUES AFTER " + str(Graphics.iteration) + " ITERATION",fill='white')
 		cv.pack()
 		Button(root,text="cotinue",command = deletee).pack(side='left')
+
 		Label(root,width=5,text='noise:').pack(side='left')
 		Entry(root,width=5,textvariable=Graphics.noise).pack(side='left')
 		Graphics.noise.set('0.2')
+
 		Label(root,width=8,text='discount:').pack(side='left')
 		Entry(root,width=5,textvariable=Graphics.discount).pack(side='left')
 		Graphics.discount.set('0.9')
+
 		Label(root,width=10,text='livingreward:').pack(side='left')
 		Entry(root,width=5,textvariable=Graphics.livingreword).pack(side='left')
 		Graphics.livingreword.set('0.0')
+
+		Label(root,width=5,text='alpha:').pack(side='left')
+		Entry(root,width=5,textvariable=Graphics.alpha).pack(side='left')
+		Graphics.alpha.set('1.0')
+
+		Label(root,width=7,text='epsilon:').pack(side='left')
+		Entry(root,width=5,textvariable=Graphics.epsilon).pack(side='left')
+		Graphics.epsilon.set('0.0')
+
 		Button(root,text="reset",command = resets).pack(side='left')
-		root.geometry('520x450')
+
+		root.geometry('700x450')
 		root.title('Q learning')
 		#frame = Frame(root,height=400,width=500,bg='black').pack(expand=YES,fill=BOTH)
 		root.mainloop()
@@ -78,7 +96,7 @@ def deletee():
 		i=0
 		j=0
 		for value in content:
-			value = round(value,2)
+			value = round(value,4)
 			if value != 0.0:
 				Graphics.QValues[i][j] = Graphics.QV.create_text(90+80 * j,90 + 80 * i,text=str(value),fill='white')
 			i = i + 1
@@ -110,24 +128,32 @@ def drawArrow(i,j,direct):
 		Graphics.Arrows[i][j] = Graphics.QV.create_polygon((130+80*j,90+80*i,130+80*j-5,90+80*i-5,130+80*j-5,90+80*i+5),fill='white') 
 
 def resets():
-	for i in range(3):
-		for j in range(4):
-			if Graphics.QValues[i][j] != 0:
-				Graphics.QV.delete(Graphics.QValues[i][j])
-			if Graphics.Arrows[i][j] != 0:
-				Graphics.QV.delete(Graphics.Arrows[i][j])
 	newNoise = Graphics.noise.get()
 	newDiscount = Graphics.discount.get()
 	newLivingReward = Graphics.livingreword.get()
-	Graphics.iteration = 0
-	Graphics.QV.delete(Graphics.IterateCount)
+	newAlpha = Graphics.alpha.get()
+	newEpsilon = Graphics.epsilon.get()
 	if newNoise == '':
 		newNoise = 0.2
 	if newDiscount == '':
 		newDiscount = 0.9
 	if newLivingReward == '':
 		newLivingReward = 0.0
-	Graphics.gridworld = juzhen(noise=float(newNoise),discount=float(newDiscount),livingreward=float(newLivingReward))
+
+	print('noise : ' + newNoise+ " discount: " + newDiscount + " livingreward : " + newLivingReward + " alpha : " + newAlpha + " epsilon : " + newEpsilon)
+
+	if float(newAlpha) + float(newEpsilon) > 1.0:
+		tkMessageBox.showinfo("Error","alpha + epsilon must smaller than 1.0 ! please change it ")
+	else:
+		for i in range(3):
+			for j in range(4):
+				if Graphics.QValues[i][j]!=0.0:
+					Graphics.QV.delete(Graphics.QValues[i][j])
+				if Graphics.Arrows[i][j]!= 0.0:
+					Graphics.QV.delete(Graphics.Arrows[i][j])
+		Graphics.iteration = 0
+		Graphics.QV.delete(Graphics.IterateCount)
+		Graphics.gridworld = juzhen(noise=float(newNoise),discount=float(newDiscount),livingreward=float(newLivingReward),alpha=float(newAlpha),epsilon=float(newEpsilon))
 	#a.stepinto()
 	#print a.returnTheQValue()
 
